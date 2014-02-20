@@ -1,7 +1,25 @@
 client
+<% if node["openvpn"]["type"] == "server-bridge" -%>
+dev tap
+<% else -%>
 dev tun
+<% end -%>
 proto <%= node["openvpn"]["proto"] %>
+
+<% if node["openvpn"]["remote"] -%>
+
+<% i=0 %>
+<% while i < node["openvpn"]["remote"]["gateway"].length do %>
+
+remote <%= node["openvpn"]["remote"]["gateway"][i] %> <%= node["openvpn"]["remote"]["port"][i]; %>
+
+<% i += 1; %>
+<% end %>
+
+<% else -%>
 remote <%= node["openvpn"]["gateway"] %> <%= node["openvpn"]["port"] %>
+<% end -%>
+
 resolv-retry infinite
 nobind
 persist-key
@@ -11,3 +29,16 @@ cert <%= @username %>.crt
 key <%= @username %>.key
 comp-lzo
 verb 3
+
+<% if node['openvpn']['keepalive'] -%>
+keepalive <%= node['openvpn']['keepalive'] %>
+<% end %>
+
+<% if node['openvpn']['cipher'] -%>
+cipher <%= node['openvpn']['cipher'] %>
+<% end %>
+
+# Downgrade privileges after initialization (non-Windows only)
+# TODO Comment out for windows machines
+user nobody
+group nobody
